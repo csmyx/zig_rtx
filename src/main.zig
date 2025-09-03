@@ -1,6 +1,5 @@
 const std = @import("std");
-const vec = @import("vec.zig");
-const Vec3 = vec.Vec3;
+const Vec3 = @import("Vec3.zig");
 const Ray = @import("Ray.zig");
 const Writer = std.Io.Writer;
 
@@ -67,7 +66,7 @@ fn printP3(height: i32, width: i32, out: *Writer) !void {
             const fh: f32 = @floatFromInt(h);
             const fw: f32 = @floatFromInt(w);
             const v: Vec3 = .{ fh / (height - 1), fw / (width - 1), 0 };
-            const rgb: vec.RGB256 = .{ .data = v };
+            const rgb: Vec3.RGB256 = .{ .data = v };
 
             try out.print("{f}\n", .{rgb});
         }
@@ -79,7 +78,7 @@ fn writeColor(color: Vec3, w: *Writer) !void {
     // const fh: f32 = @floatFromInt(h);
     // const fw: f32 = @floatFromInt(w);
     // const v: Vec3 = .{ fh / (height - 1), fw / (width - 1), 0 };
-    const rgb: vec.RGB256 = .{ .data = color };
+    const rgb: Vec3.RGB256 = .{ .data = color };
     try w.print("{f}\n", .{rgb});
 }
 
@@ -93,7 +92,7 @@ fn raySimpleSphere(r: Ray) Vec3 {
     if (hitSphereTime(center, raduis, r)) |t| {
         if (t > 0.0) {
             const unit_nomal = r.at(t).subtract(center).unit();
-            return vec.nomalColor(unit_nomal, -1, 1);
+            return Vec3.nomalColor(unit_nomal, -1, 1);
         }
     }
     return rayGradientColor(r);

@@ -1,7 +1,6 @@
 const Ray = @This();
 const std = @import("std");
-const vec = @import("vec.zig");
-const Vec3 = vec.Vec3;
+const Vec3 = @import("Vec3.zig");
 
 ori: Vec3,
 dir: Vec3,
