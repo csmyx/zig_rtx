@@ -1,6 +1,7 @@
 const std = @import("std");
 const Writer = std.Io.Writer;
 
+pub const Point = Vec3;
 pub const Zero: Vec3 = .{ .e = @splat(0) };
 pub const Vec3 = struct {
     const E = @Vector(3, f64);
@@ -43,7 +44,7 @@ pub const Vec3 = struct {
         return .{ .e = self.e / e };
     }
     pub fn dot(self: Vec3, other: Vec3) f64 {
-        return self.e[0] * other.e[0] + self.e[1] * other.e[1] + self.e[2] * other.e[2];
+        return @reduce(.Add, self.e * other.e);
     }
     pub fn cross(self: Vec3, other: Vec3) Vec3 {
         return .{ .e = .{
@@ -59,16 +60,6 @@ pub const Vec3 = struct {
         return .{ .e = self.e - other.e };
     }
 };
-
-// pub fn cross(lhs: Vec3, rhs: Vec3) Vec3 {
-//     return lhs.cross(rhs);
-// }
-// pub fn add(lhs: Vec3, rhs: Vec3) Vec3 {
-//     return lhs.add(rhs);
-// }
-// pub fn subtract(lhs: Vec3, rhs: Vec3) Vec3 {
-//     return lhs.subtract(rhs);
-// }
 
 pub const Fmt = std.fmt.Alt(Vec3, format);
 fn format(v: Vec3, w: *Writer) !void {

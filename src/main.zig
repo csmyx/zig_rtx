@@ -109,11 +109,11 @@ fn rayGradientColor(r: Ray) Vec3 {
 fn hitSphereTime(center: Vec3, radius: f64, r: Ray) ?f64 {
     const oc: Vec3 = center.subtract(r.ori);
     const a = r.dir.dot(r.dir);
-    const b = -2 * r.dir.dot(oc);
+    const h = r.dir.dot(oc);
     const c = oc.dot(oc) - radius * radius;
-    const discriminant = b * b - 4 * a * c;
+    const discriminant = h * h - a * c;
     if (discriminant >= 0) {
-        return (-b - std.math.sqrt(discriminant)) / (2.0 * a);
+        return (h - @sqrt(discriminant)) / a;
     }
     // null indicates no intersection
     return null;
