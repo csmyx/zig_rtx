@@ -3,6 +3,8 @@ const Ray = @import("Ray.zig");
 const builtin = @import("builtin");
 const std = @import("std");
 const assert = std.debug.assert;
+const testing = std.testing;
+const Allocator = std.mem.Allocator;
 
 pub const Object = union(enum) {
     sphere: Sphere,
@@ -73,7 +75,55 @@ const HitRecord = struct {
     }
 };
 
-const testing = std.testing;
+pub const World = struct {
+    list: []const Object,
+    // Return HitRecord with the minimum ray_t among hits on the object list (if any).
+    pub fn minimum_hit(w: World, r: Ray, ray_tmin: f64, ray_tmax: f64) ?HitRecord {
+        var hit_anything = false;
+        var min_hit_t = ray_tmax;
+        var min_hit_record: ?HitRecord = null;
+        for (w.list) |o| {
+            if (o.hit(r, ray_tmin, min_hit_t)) |hr| {
+                hit_anything = true;
+                min_hit_t = hr.t;
+                min_hit_record = hr;
+            }
+        }
+        return min_hit_record;
+    }
+};
+// const ObjectList = struct {
+//     a: std.ArrayList(Object),
+//     pub fn init(gpa: Allocator, obj_list: []Object) ObjectList {
+//         var list: ObjectList = .{ .a = .empty };
+//         for (obj_list) |o| {
+//             try list.a.append(gpa, o);
+//         }
+//         return list;
+//     }
+
+//     pub fn add(list: *ObjectList, gpa: Allocator, o: Object) void {
+//         try list.a.append(gpa, o);
+//     }
+
+//     // Return HitRecord with the minimum ray_t (if any).
+//     pub fn hit(list: ObjectList, r: Ray, ray_tmin: f64, ray_tmax: f64) ?HitRecord {
+//         var hit_anything = false;
+//         var min_hit_t = ray_tmax;
+//         var min_hit_record: ?HitRecord = null;
+//         for (list.a.items) |o| {
+//             if (o.hit(r, ray_tmin, min_hit_t)) |hr| {
+//                 hit_anything = true;
+//                 min_hit_t = hr.t;
+//                 min_hit_record = hr;
+//             }
+//         }
+//         return min_hit_record;
+//     }
+//     pub fn deinit(list: *ObjectList, gpa: Allocator) void {
+//         list.a.deinit(gpa);
+//     }
+// };
 
 test "sphere" {
     const sphere = Object{ .sphere = .{ .center = .init(0, 0, -1), .radius = 0.5 } };

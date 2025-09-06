@@ -1,6 +1,10 @@
 const std = @import("std");
 const Vec3 = @import("Vec3.zig");
+const Color = Vec3.Color;
 const Ray = @import("Ray.zig");
+const _object = @import("object.zig");
+const Object = _object.Object;
+const World = _object.World;
 const Writer = std.Io.Writer;
 
 pub fn main() !void {
@@ -11,11 +15,15 @@ pub fn main() !void {
     // Image
     const aspect_ratio: f64 = 16.0 / 9.0;
     const image_width: u32 = 400;
-    const image_height: u32 = blk: {
-        const h: u32 = image_width / aspect_ratio;
-        if (h < 1) break :blk 1;
-        break :blk h;
+    const image_height: u32 = @max(image_width / aspect_ratio, 1);
+
+    // World
+    const objects = [_]Object{
+        Object{ .sphere = .{ .center = .init(0, 0, -1), .radius = 0.5 } },
+        // Object{ .sphere = .{ .center = .init(1, 0, -1), .radius = 0.5 } },
+        Object{ .sphere = .{ .center = .init(0, -100.5, -1), .radius = 100 } },
     };
+    const world: World = .{ .list = &objects };
 
     // Camera
     const focal_length = 1.0;
@@ -51,7 +59,7 @@ pub fn main() !void {
             // std.debug.print("{d:.3} ", .{@abs(r.dir.unit().y())});
             // std.debug.print("{f} ", .{vec.Fmt{ .data = r.dir.unit() }});
             // std.debug.print("{f} ", .{vec.Fmt{ .data = pixel_center }});
-            const pixel_color = rayColor(r);
+            const pixel_color = rayColor(r, world);
             try writeColor(pixel_color, out);
         }
         // std.debug.print("\n", .{});
@@ -82,9 +90,19 @@ fn writeColor(color: Vec3, w: *Writer) !void {
     try w.print("{f}\n", .{rgb});
 }
 
-fn rayColor(r: Ray) Vec3 {
-    return raySimpleSphere(r);
+fn rayColor(r: Ray, w: World) Vec3 {
+    // _ = w;
+    // return raySimpleSphere(r);
+    return rayWorld(r, w);
 }
+
+fn rayWorld(r: Ray, w: World) Vec3 {
+    if (w.minimum_hit(r, 0, std.math.floatMax(f64))) |hr| {
+        return hr.normal.add(Color.init(1, 1, 1)).mul(0.5);
+    }
+    return rayGradientColor(r);
+}
+
 fn raySimpleSphere(r: Ray) Vec3 {
     const center = Vec3.init(0, 0, -1);
     const raduis = 0.5;
@@ -102,7 +120,7 @@ fn rayGradientColor(r: Ray) Vec3 {
     const a = 0.5 * (unit_dir.y() + 1.0);
     // std.debug.print("a: {d}, v: {f}\n", .{ a, vec.Fmt{ .data = unit_dir } });
     return (Vec3.init(1.0, 1.0, 1.0).mul(1.0 - a))
-        .add(Vec3.init(1.0, 0.0, 1.0).mul(a));
+        .add(Vec3.init(0.5, 0.7, 1.0).mul(a));
 }
 
 fn hitSphereTime(center: Vec3, radius: f64, r: Ray) ?f64 {
@@ -114,17 +132,9 @@ fn hitSphereTime(center: Vec3, radius: f64, r: Ray) ?f64 {
     if (discriminant >= 0) {
         return (h - @sqrt(discriminant)) / a;
     }
-    // null indicates no intersection
+    // null indicates no hit
     return null;
 }
-// bool hit_sphere(const point3& center, double radius, const ray& r) {
-//     vec3 oc = center - r.origin();
-//     auto a = dot(r.direction(), r.direction());
-//     auto b = -2.0 * dot(r.direction(), oc);
-//     auto c = dot(oc, oc) - radius*radius;
-//     auto discriminant = b*b - 4*a*c;
-//     return (discriminant >= 0);
-// }
 
 // test "simple test" {
 //     const gpa = std.testing.allocator;
@@ -145,4 +155,9 @@ fn hitSphereTime(center: Vec3, radius: f64, r: Ray) ?f64 {
 //     try std.testing.fuzz(Context{}, Context.testOne, .{});
 // }
 
-test "t1" {}
+test "t1" {
+    const x = [_]u8{ 1, 2, 3 };
+    const s: []const u8 = &x;
+    try std.testing.expectEqual(@as(i32, 1), s[0]);
+    try std.testing.expectEqual(3, s.len);
+}

@@ -3,6 +3,7 @@ const Writer = std.Io.Writer;
 
 const Vec3 = @This();
 pub const Point = Vec3;
+pub const Color = Vec3;
 const Zero: Vec3 = .{ .e = @splat(0) };
 
 e: E,
@@ -88,8 +89,8 @@ fn format(v: Vec3, w: *Writer) !void {
     try w.print("<{d:.3} {d:.3} {d:.3}>", .{ v.e[0], v.e[1], v.e[2] });
 }
 
-pub const RGB256 = std.fmt.Alt(Vec3, rgb256Format);
-fn rgb256Format(color: Vec3, w: *Writer) !void {
+pub const RGB256 = std.fmt.Alt(Color, rgb256Format);
+fn rgb256Format(color: Color, w: *Writer) !void {
     const color_unit: Vec3 = .{ .e = @splat(255.999) };
     const rgb: Vec3 = color.mul3(color_unit);
 
@@ -100,7 +101,7 @@ fn rgb256Format(color: Vec3, w: *Writer) !void {
     try w.print("{d} {d} {d}", .{ r, g, b });
 }
 
-pub fn nomalColor(v: Vec3, mn: f64, mx: f64) Vec3 {
+pub fn nomalColor(v: Color, mn: f64, mx: f64) Vec3 {
     const x_ = (v.e[0] - mn) / (mx - mn);
     const y_ = (v.e[1] - mn) / (mx - mn);
     const z_ = (v.e[2] - mn) / (mx - mn);
