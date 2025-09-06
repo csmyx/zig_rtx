@@ -5,12 +5,14 @@ const std = @import("std");
 const assert = std.debug.assert;
 const testing = std.testing;
 const Allocator = std.mem.Allocator;
+const util = @import("util.zig");
+const Interval = util.Interval;
 
 pub const Object = union(enum) {
     sphere: Sphere,
-    pub fn hit(o: Object, r: Ray, ray_tmin: f64, ray_tmax: f64) ?HitRecord {
+    pub fn hit(o: Object, r: Ray, ray_t: Interval) ?HitRecord {
         return switch (o) {
-            inline else => |o_| o_.hit(r, ray_tmin, ray_tmax),
+            inline else => |o_| o_.hit(r, ray_t),
         };
     }
 };
@@ -18,7 +20,7 @@ pub const Object = union(enum) {
 pub const Sphere = struct {
     center: Vec3,
     radius: f64,
-    pub fn hit(s: Sphere, r: Ray, ray_tmin: f64, ray_tmax: f64) ?HitRecord {
+    pub fn hit(s: Sphere, r: Ray, ray_t: Interval) ?HitRecord {
         const oc: Vec3 = s.center.subtract(r.ori);
         const a = r.dir.dot(r.dir);
         const h = r.dir.dot(oc);
@@ -27,9 +29,9 @@ pub const Sphere = struct {
         if (discriminant >= 0) {
             const sqrt_d = @sqrt(discriminant);
             var t = (h - sqrt_d) / a; // try first root
-            if (!(ray_tmin <= t and t <= ray_tmax)) {
+            if (!ray_t.surrounds(t)) {
                 t = (h + sqrt_d) / a; // try second root
-                if (!(ray_tmin <= t and t <= ray_tmax)) {
+                if (!ray_t.surrounds(t)) {
                     return null;
                 }
             }
@@ -78,12 +80,12 @@ const HitRecord = struct {
 pub const World = struct {
     list: []const Object,
     // Return HitRecord with the minimum ray_t among hits on the object list (if any).
-    pub fn minimum_hit(w: World, r: Ray, ray_tmin: f64, ray_tmax: f64) ?HitRecord {
+    pub fn minimum_hit(self: World, r: Ray, ray_t: Interval) ?HitRecord {
         var hit_anything = false;
-        var min_hit_t = ray_tmax;
+        var min_hit_t = ray_t.max;
         var min_hit_record: ?HitRecord = null;
-        for (w.list) |o| {
-            if (o.hit(r, ray_tmin, min_hit_t)) |hr| {
+        for (self.list) |o| {
+            if (o.hit(r, .init(ray_t.min, min_hit_t))) |hr| {
                 hit_anything = true;
                 min_hit_t = hr.t;
                 min_hit_record = hr;

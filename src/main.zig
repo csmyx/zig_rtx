@@ -6,6 +6,7 @@ const _object = @import("object.zig");
 const Object = _object.Object;
 const World = _object.World;
 const Writer = std.Io.Writer;
+const util = @import("util.zig");
 
 pub fn main() !void {
     var buf: [4096]u8 = undefined;
@@ -20,7 +21,7 @@ pub fn main() !void {
     // World
     const objects = [_]Object{
         Object{ .sphere = .{ .center = .init(0, 0, -1), .radius = 0.5 } },
-        // Object{ .sphere = .{ .center = .init(1, 0, -1), .radius = 0.5 } },
+        Object{ .sphere = .{ .center = .init(1, 0, -1), .radius = 0.5 } },
         Object{ .sphere = .{ .center = .init(0, -100.5, -1), .radius = 100 } },
     };
     const world: World = .{ .list = &objects };
@@ -97,7 +98,8 @@ fn rayColor(r: Ray, w: World) Vec3 {
 }
 
 fn rayWorld(r: Ray, w: World) Vec3 {
-    if (w.minimum_hit(r, 0, std.math.floatMax(f64))) |hr| {
+    const ray_t: util.Interval = .{ .min = 0, .max = std.math.floatMax(f64) };
+    if (w.minimum_hit(r, ray_t)) |hr| {
         return hr.normal.add(Color.init(1, 1, 1)).mul(0.5);
     }
     return rayGradientColor(r);
